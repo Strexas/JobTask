@@ -9,11 +9,12 @@ from math import ceil
 
 las_file = laspy.read('2743_1234.las')
 points = np.stack([las_file.X, las_file.Y, las_file.Z], axis=0).T
-
 w = 2 ** ceil(log2(max(las_file.X + las_file.Y + las_file.Z)))
-# points = randint(0, 2 ** 10, size=(10000, 3))
+
+# points = randint(0, 2 ** 10, size=(10, 3))
 # w = 1024
-octree = oct.Octree((0, 0, 0, w, w, w), points=points, max_depth=2)
+
+octree = oct.Octree((0, 0, 0, w, w, w), points=points, max_depth=4)
 oct.self_build(octree)
 
 # oct.print_octree(octree, 0)
