@@ -2,12 +2,12 @@ import numpy
 import open3d as o3d
 
 
-class Cube:
+class DrawCube:
     def __init__(self):
         with open('points.txt') as f:
             self.base_dtp = [[int(i) for i in j.split()] for j in f.readlines()]
 
-        with open('meshes.txt') as g:
+        with open('triangles.txt') as g:
             self.base_faces = [[int(i) for i in j.split()] for j in g.readlines()]
         self.dtp = []
         self.faces = []
