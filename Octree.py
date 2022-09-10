@@ -12,7 +12,7 @@ class Octree:
         self.parent: Octree = parent
         self.max_depth: int = max_depth
 
-    def collide(self, point):
+    def collide_point(self, point):
         x0, y0, z0, x1, y1, z1 = self.octant
         if x0 <= point[0] <= x1 and y0 <= point[1] <= y1 and z0 <= point[2] <= z1:
             return True
@@ -38,7 +38,7 @@ def self_build(octree):
 
     for child in octree.childs:
         for point in octree.points.copy():
-            if child.collide(point):
+            if child.collide_point(point):
                 child.points.add(point)
         octree.points -= child.points
 
