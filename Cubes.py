@@ -1,8 +1,8 @@
-import numpy
+import numpy as np
 import open3d as o3d
 
 
-class DrawCube:
+class Cubes:
     def __init__(self):
         with open('points.txt') as f:
             self.base_dtp = [[int(i) for i in j.split()] for j in f.readlines()]
@@ -22,12 +22,5 @@ class DrawCube:
     def draw_cubes(self):
         self.mesh.vertices = o3d.utility.Vector3dVector(self.dtp)
         self.mesh.triangles = o3d.utility.Vector3iVector(self.faces)
-        self.mesh.vertex_colors = o3d.utility.Vector3dVector(numpy.random.uniform(0, 1, size=(self.k * 8, 3)))
+        self.mesh.vertex_colors = o3d.utility.Vector3dVector(np.random.random(size=(self.k * 8, 3)))
         o3d.visualization.draw_geometries([self.mesh])
-
-    def get_octree(self, octree):
-        if len(octree.childs) == 0:
-            self.add_cube(octree.octant[:3], octree.octant[3] - octree.octant[0])
-
-        for child in octree.childs:
-            self.get_octree(child)

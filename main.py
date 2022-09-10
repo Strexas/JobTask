@@ -4,7 +4,7 @@ import open3d as o3d
 
 las_file = laspy.read('2743_1234.las')
 
-data = np.stack([las_file.X, las_file.Y, las_file.Z], axis=0).T
+data = las_file.xyz
 
 geom = o3d.geometry.PointCloud()
 geom.points = o3d.utility.Vector3dVector(data)
