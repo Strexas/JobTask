@@ -2,9 +2,12 @@
 
 don't forget to download .las file
 
-Just run main2.py to that everything works
+Just run main.py
 
-if you are too lazy to wait, you can watch a video with result or open .png files
+If you are too lazy to wait, you can:
+  1. watch a video with result
+  2. open .png files
+  3. decrease points_amount to 1_000_000
 
 md - max_depth
 pa - points amount
