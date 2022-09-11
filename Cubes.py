@@ -23,5 +23,5 @@ class Cubes:
         self.mesh.vertices = o3d.utility.Vector3dVector(self.dtp)
         self.mesh.triangles = o3d.utility.Vector3iVector(self.faces)
         self.mesh.vertex_colors = o3d.utility.Vector3dVector(np.concatenate(
-            (np.random.uniform(0.4, 0.6,size=((self.k - 2) * 8, 3)), np.array([[1, 0, 0]] * 8 + [[0, 0, 1]] * 8)), axis=0))
+            (np.random.uniform(0.4, 0.6,size=((self.k - l) * 8, 3)), np.array([[1, 0, 0]] * 8 + [[0, 1, 0]] * (l - 2) * 8 + [[0, 0, 1]] * 8)), axis=0))
         return self.mesh
