@@ -1,7 +1,7 @@
 from Octree import Octree
 
 
-def can_go_to_point(octree: Octree, point: tuple):
+def can_go_to_point(octree: Octree, point) -> bool:
     if octree.childs:
         for child in octree.childs:
             if child.collide_point(point):
@@ -11,54 +11,60 @@ def can_go_to_point(octree: Octree, point: tuple):
     return True
 
 
-def xyz_to_cube(xyz, cube):
-    x, y, z = xyz
-    x0, y0, z0 = cube[0]
-    w = cube[1]
-    x = (x - x0 + x0 // w * w) // w * w + x0 - x0 // w * w
-    y = (y - y0 + y0 // w * w) // w * w + y0 - y0 // w * w
-    z = (z - z0 + z0 // w * w) // w * w + z0 - z0 // w * w
-    return (round(x, 3), round(y, 3), round(z, 3)), w
+def xyz_to_x0y0z0(xyz, cube):
+    # x = xyz[0]
+    # x0 = x0y0z0[0][0]
+    # w = x0y0z0[1]
+    # x = (x - x0 + x0 // w * w) // w * w + x0 - x0 // w * w
+    return tuple(
+        [
+            round(((xyz[i] - cube[0][i] + cube[0][i] // cube[1] * cube[1])
+                    // cube[1] * cube[1] + cube[0][i] - cube[0][i] // cube[1] * cube[1]), 3)
+            for i in range(3)
+        ]
+    )
 
 
 class Node:
     def __init__(self):
-        self.cube = None
+        self.x0y0z0 = None
         self.previous = None
         self.xyz = None
-        self.cost = 9999999999
+        self.cost = 1_000_000_000
+        self.dist = None
 
     def __eq__(self, other):
-        x1, y1, z1 = self.cube
-        x2, y2, z2 = other.cube
+        x1, y1, z1 = self.x0y0z0
+        x2, y2, z2 = other.x0y0z0
+
         if round(x1 - x2, 3) == round(y1 - y2, 3) == round(z1 - z2, 3) == 0:
             return True
+
         return False
 
     def __hash__(self):
-        return hash(self.cube)
+        return hash(self.x0y0z0)
 
 
 class AStar:
-    def __init__(self, start: tuple, destiny: tuple, oct_cube, octree, start_color=(0, 0, 1), destiny_color=(1, 0, 0)):
+    def __init__(self, start: tuple, goal: tuple, oct_cube, octree: Octree):
         self.start = Node()
-        self.start.cube = xyz_to_cube(start, oct_cube)[0]
+        self.start.x0y0z0 = xyz_to_x0y0z0(start, oct_cube)
         self.start.xyz = start
         self.start.cost = 0
 
-        self.destiny = Node()
-        self.destiny.cube = xyz_to_cube(destiny, oct_cube)[0]
-        self.destiny.xyz = destiny
+        self.goal = Node()
+        self.goal.x0y0z0 = xyz_to_x0y0z0(goal, oct_cube)
+        self.goal.xyz = goal
 
-        self.start_color = start_color
-        self.destiny_color = destiny_color
+        self.start.dist = self.distance_to_goal(self.start)
 
         self.step = oct_cube[1]
         self.octree = octree
 
-    def distance_to_destiny(self, node):
-        x0, y0, z0 = node.cube
-        x1, y1, z1 = self.destiny.cube
+    def distance_to_goal(self, node):
+        x0, y0, z0 = node.x0y0z0
+        x1, y1, z1 = self.goal.x0y0z0
         return (x1 - x0) ** 2 + (y1 - y0) ** 2 + (z1 - z0) ** 2
 
     def find_path(self):
@@ -66,55 +72,63 @@ class AStar:
         explored = set()
 
         while reachable:
-            node = list(reachable)[0]
+            node = reachable.pop()
+            reachable.add(node)
+
             for pos_node in reachable:
-                pos_cost = self.distance_to_destiny(pos_node)
-                node_cost = self.distance_to_destiny(node)
-                if pos_cost + pos_node.cost < node_cost + node.cost:
+
+                if pos_node.dist + pos_node.cost < node.dist + node.cost:
                     node = pos_node
-                elif pos_cost < node_cost:
+                elif pos_node.dist < node.dist and pos_node.dist + pos_node.cost == node.dist + node.cost:
                     node = pos_node
 
-            print(node.cube, node.cost, self.distance_to_destiny(node))
-
-            if node == self.destiny:
-                self.destiny = node
+            if node == self.goal:
+                self.goal = node
                 return self.get_path_cubes()
 
             explored.add(node)
             reachable.remove(node)
 
-            for adj in (self.nodes_can_go(node) - explored):
+            for adj in (self.adjacent_to_node(node) - explored):
+
                 reachable.add(adj)
+                adj.dist = self.distance_to_goal(adj)
+
                 if node.cost + self.step < adj.cost:
                     adj.previous = node
                     adj.cost = node.cost + self.step
+
         return None
 
-    def nodes_can_go(self, node):
+    def adjacent_to_node(self, node):
         nodes = set()
         x, y, z = node.xyz
-        x0, y0, z0 = node.cube
+        x0, y0, z0 = node.x0y0z0
+
         for i in range(-1, 2, 2):
             for j in range(3):
+
                 coord = [x, y, z]
                 coord[j] += self.step * i
-                coord = tuple(coord)
+
                 if can_go_to_point(self.octree, coord):
                     pos_node = Node()
-                    pos_node.xyz = coord
+                    pos_node.xyz = tuple(coord)
+
                     coord_cube = [x0, y0, z0]
                     coord_cube[j] += self.step * i
-                    pos_node.cube = tuple(coord_cube)
+                    pos_node.x0y0z0 = tuple(coord_cube)
+
                     nodes.add(pos_node)
-                else:
-                    print(1)
+
         return nodes
 
     def get_path_cubes(self):
         path = list()
-        to_node = self.destiny
+        to_node = self.goal
+
         while to_node is not None:
-            path.append((to_node.cube, self.step))
+            path.append((to_node.x0y0z0, self.step))
             to_node = to_node.previous
+
         return path

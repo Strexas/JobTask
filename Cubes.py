@@ -1,4 +1,3 @@
-import numpy as np
 import open3d as o3d
 
 
@@ -9,19 +8,38 @@ class Cubes:
 
         with open('triangles.txt') as g:
             self.base_faces = [[int(i) for i in j.split()] for j in g.readlines()]
+
         self.dtp = []
         self.faces = []
-        self.mesh = o3d.geometry.TriangleMesh()
+        self.colors = []
+
         self.k = 0
 
-    def add_cube(self, xyz0, w):
-        self.dtp += [[j[i] * w + xyz0[i] for i in range(3)] for j in self.base_dtp]
+        self.mesh = o3d.geometry.TriangleMesh()
+
+    def add_cube(self, cube):
+        x0y0z0 = cube[0]
+        w = cube[1]
+
+        self.dtp += [[j[i] * w + x0y0z0[i] for i in range(3)] for j in self.base_dtp]
         self.faces += [[j[i] + 8 * self.k for i in range(3)] for j in self.base_faces]
+
         self.k += 1
 
-    def draw(self, l):
+    def add_cubes(self, cubes):
+        for cube in cubes:
+            self.add_cube(cube)
+
+    def __add__(self, other):
+        new = Cubes()
+        new.dtp = self.dtp + other.dtp
+        new.faces = self.faces + other.faces
+        new.colors = self.colors + other.colors
+        new.k = self.k + other.k
+        return new
+
+    def draw(self):
         self.mesh.vertices = o3d.utility.Vector3dVector(self.dtp)
         self.mesh.triangles = o3d.utility.Vector3iVector(self.faces)
-        self.mesh.vertex_colors = o3d.utility.Vector3dVector(np.concatenate(
-            (np.random.uniform(0.4, 0.6,size=((self.k - l) * 8, 3)), np.array([[1, 0, 0]] * 8 + [[0, 1, 0]] * (l - 2) * 8 + [[0, 0, 1]] * 8)), axis=0))
-        return self.mesh
+        self.mesh.vertex_colors = o3d.utility.Vector3dVector(self.colors)
+        o3d.visualization.draw_geometries([self.mesh])

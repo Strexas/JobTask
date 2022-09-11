@@ -4,7 +4,6 @@ class Octree:
             self.points: set = set()
         elif points is not set:
             self.points: set = {tuple(i) for i in points}
-            print('Origin of Octree is ready')
         else:
             self.points: set = points
         self.octant: tuple = octant
